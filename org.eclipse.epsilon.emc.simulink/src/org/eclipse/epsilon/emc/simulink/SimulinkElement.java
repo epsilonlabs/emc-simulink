@@ -27,6 +27,10 @@ public class SimulinkElement implements IModelElement {
 	}
 	
 	public void setPath(String path) {
+		// The first time the path of the block is set
+		// the block is added to the model
+		// TODO: Once the element is created only keep
+		// the last fragment of the type
 		if (this.path == null && path != null) {
 			try {
 				engine.eval("add_block('" + type + "', '" + path + "')");
@@ -48,4 +52,29 @@ public class SimulinkElement implements IModelElement {
 		}
 		return type;
 	}
+	
+	public void link(SimulinkElement other) {
+		link(other, 1, 1);
+	}
+	
+	public void linkTo(SimulinkElement other, int inPort) {
+		link(other, 1, inPort);
+	}
+	
+	public void linkFrom(SimulinkElement other, int outPort) {
+		link(other, outPort, 1);
+	}
+	
+	public void link(SimulinkElement other, int outPort, int inPort) {
+		String command = "OutPortHandles = get_param('" + getPath() + "','PortHandles')\n" +
+						 "InPortHandles = get_param('" + other.getPath() + "','PortHandles')\n" + 
+						 "add_line('sample2',OutPortHandles.Outport(" + outPort + "),InPortHandles.Inport(" + inPort + "))";
+		try {
+			engine.eval(command);
+		}
+		catch (Exception ex) {
+			throw new RuntimeException(ex);
+		}
+	}
+	
 }
