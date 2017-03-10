@@ -14,12 +14,12 @@ public class SimulinkEngine {
 		}
 	}
 	
-	protected Object evalWithResult(String cmd) throws Exception {
+	public Object evalWithResult(String cmd) throws Exception {
 		engine.eval("result = " + cmd);
 		return engine.getVariable("result");
 	}
 	
-	protected void eval(String cmd) throws Exception {
+	public void eval(String cmd) throws Exception {
 		engine.eval(cmd);
 	}
 	

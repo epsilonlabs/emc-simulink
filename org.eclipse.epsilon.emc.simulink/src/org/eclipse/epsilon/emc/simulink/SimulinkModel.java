@@ -2,6 +2,7 @@ package org.eclipse.epsilon.emc.simulink;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -46,6 +47,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 		try {
 			engine = SimulinkEnginePool.getInstance().getSimulinkEngine();
 			if (readOnLoad) {
+				// TODO: Add a flag for using the invisible load_system instead
 				engine.eval("open_system " + file.getAbsolutePath());
 			}
 			else {
@@ -66,14 +68,12 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	
 	@Override
 	public Object getEnumerationValue(String enumeration, String label) throws EolEnumerationValueNotFoundException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public String getTypeNameOf(Object instance) {
-		// TODO Auto-generated method stub
-		return null;
+		return ((SimulinkElement) instance).getType();
 	}
 
 	@Override
@@ -84,8 +84,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 
 	@Override
 	public String getElementId(Object instance) {
-		// TODO Auto-generated method stub
-		return null;
+		return ((SimulinkElement) instance).getPath();
 	}
 
 	@Override
@@ -102,8 +101,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 
 	@Override
 	public boolean isInstantiable(String type) {
-		// TODO Auto-generated method stub
-		return false;
+		return hasType(type);
 	}
 
 	@Override
@@ -113,20 +111,24 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 
 	@Override
 	public boolean store(String location) {
-		// TODO Auto-generated method stub
-		return false;
+		// TODO: If we can find the top system then we can call save_system(sys, newsysname.slx)
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public boolean store() {
-		// TODO Auto-generated method stub
-		return false;
+		try {
+			engine.eval("save_system");
+			return true;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override
 	protected Collection<SimulinkElement> allContentsFromModel() {
 		try {
-			return getElementsForPaths(engine.evalWithResult("find_system"));
+			return getElementsForPaths(engine.evalWithResult("find_system"), null);
 		} catch (Exception e) {
 			return Collections.emptyList();
 		}
@@ -136,7 +138,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	protected Collection<SimulinkElement> getAllOfTypeFromModel(String type)
 			throws EolModelElementTypeNotFoundException {
 		try {
-			return getElementsForPaths(engine.evalWithResult("find_system('BlockType', '" + type + "')"));
+			return getElementsForPaths(engine.evalWithResult("find_system('BlockType', '" + type + "')"), type);
 		} catch (Exception e) {
 			throw new EolModelElementTypeNotFoundException(this.getName(), type);
 		}
@@ -151,14 +153,14 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 		else return getAllOfTypeFromModel(kind);
 	}
 	
-	protected List<SimulinkElement> getElementsForPaths(Object paths) {
+	protected List<SimulinkElement> getElementsForPaths(Object paths, String type) {
 		if (paths instanceof String) {
 			paths = new String[]{(String) paths};
 		}
 		
 		List<SimulinkElement> elements = new ArrayList<SimulinkElement>();
 		for (String path : (String[]) paths) {
-			elements.add(new SimulinkElement(this, path));
+			elements.add(new SimulinkElement(this, path, type, engine));
 		}
 		
 		return elements;
@@ -167,8 +169,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	@Override
 	protected SimulinkElement createInstanceInModel(String type)
 			throws EolModelElementTypeNotFoundException, EolNotInstantiableModelElementTypeException {
-		// TODO Auto-generated method stub
-		return null;
+		return new SimulinkElement(this, null, type, engine);
 	}
 
 	@Override
@@ -193,8 +194,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 
 	@Override
 	protected Collection<String> getAllTypeNamesOf(Object instance) {
-		// TODO Auto-generated method stub
-		return null;
+		return Arrays.asList("Block", ((SimulinkElement)instance).getType());
 	}
 	
 	@Override
