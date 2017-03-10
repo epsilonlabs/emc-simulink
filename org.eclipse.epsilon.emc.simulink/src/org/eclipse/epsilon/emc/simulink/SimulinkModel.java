@@ -13,15 +13,15 @@ import org.eclipse.epsilon.eol.exceptions.models.EolEnumerationValueNotFoundExce
 import org.eclipse.epsilon.eol.exceptions.models.EolModelElementTypeNotFoundException;
 import org.eclipse.epsilon.eol.exceptions.models.EolModelLoadingException;
 import org.eclipse.epsilon.eol.exceptions.models.EolNotInstantiableModelElementTypeException;
+import org.eclipse.epsilon.eol.execute.introspection.IPropertyGetter;
 import org.eclipse.epsilon.eol.models.CachedModel;
 import org.eclipse.epsilon.eol.models.IRelativePathResolver;
-
-import com.mathworks.engine.MatlabEngine;
 
 public class SimulinkModel extends CachedModel<SimulinkElement> {
 	
 	protected File file = null;
-	protected MatlabEngine engine;
+	protected SimulinkEngine engine;
+	protected SimulinkPropertyGetter propertyGetter;
 	
 	public static String PROPERTY_FILE = "file";
 	
@@ -42,12 +42,12 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	@Override
 	protected void loadModel() throws EolModelLoadingException {
 		try {
-			engine = MatlabEnginePool.getInstance().getMatlabEngine();
+			engine = SimulinkEnginePool.getInstance().getSimulinkEngine();
 			if (readOnLoad) {
-				eval("open_system " + file.getAbsolutePath());
+				engine.eval("open_system " + file.getAbsolutePath());
 			}
 			else {
-				eval("new_system");
+				engine.eval("new_system");
 			}
 		} catch (Exception e) {
 			throw new EolModelLoadingException(e, this);
@@ -124,7 +124,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	@Override
 	protected Collection<SimulinkElement> allContentsFromModel() {
 		try {
-			return getElementsForPaths(evalWithResult("find_system"));
+			return getElementsForPaths(engine.evalWithResult("find_system"));
 		} catch (Exception e) {
 			return Collections.emptyList();
 		}
@@ -134,7 +134,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	protected Collection<SimulinkElement> getAllOfTypeFromModel(String type)
 			throws EolModelElementTypeNotFoundException {
 		try {
-			return getElementsForPaths(evalWithResult("find_system('BlockType', '" + type + "')"));
+			return getElementsForPaths(engine.evalWithResult("find_system('BlockType', '" + type + "')"));
 		} catch (Exception e) {
 			throw new EolModelElementTypeNotFoundException(this.getName(), type);
 		}
@@ -171,13 +171,13 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 
 	@Override
 	protected void disposeModel() {
-		MatlabEnginePool.getInstance().release(engine);
+		SimulinkEnginePool.getInstance().release(engine);
 	}
 
 	@Override
 	protected boolean deleteElementInModel(Object instance) throws EolRuntimeException {
 		try {
-			eval("delete_block " + ((SimulinkElement) instance).getPath());
+			engine.eval("delete_block " + ((SimulinkElement) instance).getPath());
 			return true;
 		} catch (Exception e) {
 			throw new EolInternalException(e);
@@ -195,16 +195,15 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 		return null;
 	}
 	
-	protected Object evalWithResult(String cmd) throws Exception {
-		engine.eval("result = " + cmd);
-		return engine.getVariable("result");
+	@Override
+	public IPropertyGetter getPropertyGetter() {
+		if (propertyGetter == null) {
+			propertyGetter = new SimulinkPropertyGetter(engine);
+		}
+		return propertyGetter;
 	}
 	
-	protected void eval(String cmd) throws Exception {
-		engine.eval(cmd);
-	}
-	
-	public MatlabEngine getEngine() {
+	public SimulinkEngine getEngine() {
 		return engine;
 	}
 	
