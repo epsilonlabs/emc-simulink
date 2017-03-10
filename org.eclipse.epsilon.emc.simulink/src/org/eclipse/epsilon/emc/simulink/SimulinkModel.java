@@ -167,7 +167,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	@Override
 	protected Collection<SimulinkElement> allContentsFromModel() {
 		try {
-			return getElementsForPaths(engine.evalWithResult("find_system"), null);
+			return getElementsForPaths(engine.evalWithResult("find_system('" + getSimulinkModelName() + "')"), null);
 		} catch (Exception e) {
 			return Collections.emptyList();
 		}
@@ -177,7 +177,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	protected Collection<SimulinkElement> getAllOfTypeFromModel(String type)
 			throws EolModelElementTypeNotFoundException {
 		try {
-			return getElementsForPaths(engine.evalWithResult("find_system('BlockType', '" + type + "')"), type);
+			return getElementsForPaths(engine.evalWithResult("find_system('" + getSimulinkModelName() + "','BlockType', '" + type + "')"), type);
 		} catch (Exception e) {
 			throw new EolModelElementTypeNotFoundException(this.getName(), type);
 		}
