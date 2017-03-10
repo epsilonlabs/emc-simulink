@@ -42,6 +42,39 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 		load();
 	}
 	
+	
+	@Override
+	public Object createInstance(String type, Collection<Object> parameters)
+			throws EolModelElementTypeNotFoundException, EolNotInstantiableModelElementTypeException {
+		SimulinkElement instance = new SimulinkElement(this, getSimulinkModelName() + "/" + parameters.iterator().next(), type, engine);
+		instance.attach(false);
+		
+		if (isCachingEnabled()) {
+			addToCache(getSimpleTypeName(type), instance);
+		}
+		
+		return instance;
+	}
+	
+	@Override
+	protected SimulinkElement createInstanceInModel(String type)
+			throws EolModelElementTypeNotFoundException, EolNotInstantiableModelElementTypeException {
+		
+		SimulinkElement instance = new SimulinkElement(this, getSimulinkModelName() + "/" + getSimpleTypeName(type), type, engine);
+		instance.attach(true);
+		return instance;
+	}
+	
+	protected String getSimpleTypeName(String type) {
+		if (type.indexOf("/") > -1) {
+			String[] parts = type.split("/");
+			return parts[parts.length-1];
+		}
+		else {
+			return type;
+		}
+	}
+	
 	@Override
 	protected void loadModel() throws EolModelLoadingException {
 		try {
@@ -51,7 +84,13 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 				engine.eval("open_system " + file.getAbsolutePath());
 			}
 			else {
-				engine.eval("new_system");
+				try {
+					engine.eval("new_system('" + getSimulinkModelName() + "', 'Model')");
+				}
+				catch (Exception ex) {
+					// Ignore; system already exists
+				}
+				engine.eval("open_system " + getSimulinkModelName() + "");
 			}
 		} catch (Exception e) {
 			throw new EolModelLoadingException(e, this);
@@ -165,12 +204,6 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 		
 		return elements;
 	}
-	
-	@Override
-	protected SimulinkElement createInstanceInModel(String type)
-			throws EolModelElementTypeNotFoundException, EolNotInstantiableModelElementTypeException {
-		return new SimulinkElement(this, null, type, engine);
-	}
 
 	@Override
 	protected void disposeModel() {
@@ -215,6 +248,13 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	
 	public SimulinkEngine getEngine() {
 		return engine;
+	}
+	
+	public String getSimulinkModelName() {
+		String name = file.getName();
+		int pos = name.lastIndexOf(".");
+		if (pos > 0) { name = name.substring(0, pos); }
+		return name;
 	}
 	
 }

@@ -26,20 +26,15 @@ public class SimulinkElement implements IModelElement {
 		return path;
 	}
 	
-	public void setPath(String path) {
-		// The first time the path of the block is set
-		// the block is added to the model
-		// TODO: Once the element is created only keep
-		// the last fragment of the type
-		if (this.path == null && path != null) {
-			try {
-				engine.eval("add_block('" + type + "', '" + path + "')");
-			}
-			catch (Exception ex) {
-				throw new RuntimeException(ex);
-			}
+	public void attach(boolean makeNameUnique) {
+		try {
+			String makeNameUniqueFlag = makeNameUnique ? "on" : "off";
+			Double handle = (Double) engine.evalWithResult("add_block('" + type + "', '" + path + "', 'MakeNameUnique', '" + makeNameUniqueFlag + "')");
+			path = (String) engine.evalWithResult("getfullname(" + handle + ")");
 		}
-		this.path = path;
+		catch (Exception ex) {
+			throw new RuntimeException(ex);
+		}
 	}
 	
 	public String getType() {
@@ -68,7 +63,7 @@ public class SimulinkElement implements IModelElement {
 	public void link(SimulinkElement other, int outPort, int inPort) {
 		String command = "OutPortHandles = get_param('" + getPath() + "','PortHandles')\n" +
 						 "InPortHandles = get_param('" + other.getPath() + "','PortHandles')\n" + 
-						 "add_line('sample2',OutPortHandles.Outport(" + outPort + "),InPortHandles.Inport(" + inPort + "))";
+						 "add_line('" + model.getSimulinkModelName() + "',OutPortHandles.Outport(" + outPort + "),InPortHandles.Inport(" + inPort + "))";
 		try {
 			engine.eval(command);
 		}
