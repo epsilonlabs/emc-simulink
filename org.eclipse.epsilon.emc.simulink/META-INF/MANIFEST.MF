@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Simulink
+Bundle-SymbolicName: org.eclipse.epsilon.emc.simulink
+Bundle-Version: 1.0.0.qualifier
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Require-Bundle: org.eclipse.epsilon.eol.engine,
+ com.mathworks.matlab.api
+Export-Package: org.eclipse.epsilon.emc.simulink
