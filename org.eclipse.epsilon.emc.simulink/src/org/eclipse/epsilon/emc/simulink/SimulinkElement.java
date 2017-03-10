@@ -72,4 +72,9 @@ public class SimulinkElement implements IModelElement {
 		}
 	}
 	
+	@Override
+	public String toString() {
+		return getPath();
+	}
+	
 }

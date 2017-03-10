@@ -150,18 +150,18 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 
 	@Override
 	public boolean store(String location) {
-		// TODO: If we can find the top system then we can call save_system(sys, newsysname.slx)
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public boolean store() {
 		try {
-			engine.eval("save_system");
+			engine.eval("save_system ('" + getSimulinkModelName() + "', '" + location + "')");
 			return true;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	@Override
+	public boolean store() {
+		store(file.getAbsolutePath());
+		return true;
 	}
 
 	@Override
