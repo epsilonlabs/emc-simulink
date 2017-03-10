@@ -14,6 +14,7 @@ import org.eclipse.epsilon.eol.exceptions.models.EolModelElementTypeNotFoundExce
 import org.eclipse.epsilon.eol.exceptions.models.EolModelLoadingException;
 import org.eclipse.epsilon.eol.exceptions.models.EolNotInstantiableModelElementTypeException;
 import org.eclipse.epsilon.eol.execute.introspection.IPropertyGetter;
+import org.eclipse.epsilon.eol.execute.introspection.IPropertySetter;
 import org.eclipse.epsilon.eol.models.CachedModel;
 import org.eclipse.epsilon.eol.models.IRelativePathResolver;
 
@@ -22,6 +23,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	protected File file = null;
 	protected SimulinkEngine engine;
 	protected SimulinkPropertyGetter propertyGetter;
+	protected SimulinkPropertySetter propertySetter;
 	
 	public static String PROPERTY_FILE = "file";
 	
@@ -193,6 +195,14 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	protected Collection<String> getAllTypeNamesOf(Object instance) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	@Override
+	public IPropertySetter getPropertySetter() {
+		if (propertySetter == null) {
+			propertySetter = new SimulinkPropertySetter(engine);
+		}
+		return propertySetter;
 	}
 	
 	@Override
