@@ -8,7 +8,7 @@ Eclipse plugins that extend Epsilon's Model Connectivity (EMC) layer with suppor
 * Clone the repository
 * Import all projects in your Eclipse workspace
 * Run a nested Eclipse instance with the VM argument 
-  * `-Djava.library.path=<matlab-root>/bin/maci64 (change `maci46` to the `win64` if on Windows)
+  * `-Djava.library.path=<matlab-root>/bin/maci64` (change `maci46` to the `win64` if on Windows)
 
 # Quick start
 * Create a new general project (in your nested Eclipse instance)
