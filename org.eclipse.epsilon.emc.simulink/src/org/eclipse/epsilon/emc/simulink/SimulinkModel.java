@@ -85,12 +85,12 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 			}
 			else {
 				try {
-					engine.eval("new_system('" + getSimulinkModelName() + "', 'Model')");
+					engine.eval("new_system('?', 'Model')", getSimulinkModelName());
 				}
 				catch (Exception ex) {
 					// Ignore; system already exists
 				}
-				engine.eval("open_system " + getSimulinkModelName() + "");
+				engine.eval("open_system " + getSimulinkModelName());
 			}
 		} catch (Exception e) {
 			throw new EolModelLoadingException(e, this);
@@ -151,7 +151,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	@Override
 	public boolean store(String location) {
 		try {
-			engine.eval("save_system ('" + getSimulinkModelName() + "', '" + location + "')");
+			engine.eval("save_system ('?', '?')", getSimulinkModelName(), location);
 			return true;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -167,7 +167,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	@Override
 	protected Collection<SimulinkElement> allContentsFromModel() {
 		try {
-			return getElementsForPaths(engine.evalWithResult("find_system('" + getSimulinkModelName() + "')"), null);
+			return getElementsForPaths(engine.evalWithResult("find_system('?')", getSimulinkModelName()), null);
 		} catch (Exception e) {
 			return Collections.emptyList();
 		}
@@ -177,7 +177,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	protected Collection<SimulinkElement> getAllOfTypeFromModel(String type)
 			throws EolModelElementTypeNotFoundException {
 		try {
-			return getElementsForPaths(engine.evalWithResult("find_system('" + getSimulinkModelName() + "','BlockType', '" + type + "')"), type);
+			return getElementsForPaths(engine.evalWithResult("find_system('?','BlockType', '?')", getSimulinkModelName(), type), type);
 		} catch (Exception e) {
 			throw new EolModelElementTypeNotFoundException(this.getName(), type);
 		}
@@ -213,7 +213,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	@Override
 	protected boolean deleteElementInModel(Object instance) throws EolRuntimeException {
 		try {
-			engine.eval("delete_block " + ((SimulinkElement) instance).getPath());
+			engine.eval("delete_block ('?')", ((SimulinkElement) instance).getPath());
 			return true;
 		} catch (Exception e) {
 			throw new EolInternalException(e);

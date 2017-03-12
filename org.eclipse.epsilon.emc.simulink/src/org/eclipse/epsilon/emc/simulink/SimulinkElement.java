@@ -29,7 +29,7 @@ public class SimulinkElement implements IModelElement {
 	public void attach(boolean makeNameUnique) {
 		try {
 			String makeNameUniqueFlag = makeNameUnique ? "on" : "off";
-			Double handle = (Double) engine.evalWithResult("add_block('" + type + "', '" + path + "', 'MakeNameUnique', '" + makeNameUniqueFlag + "')");
+			Double handle = (Double) engine.evalWithResult("add_block('?', '?', 'MakeNameUnique', '?')", type, path, makeNameUniqueFlag);
 			path = (String) engine.evalWithResult("getfullname(" + handle + ")");
 		}
 		catch (Exception ex) {
@@ -40,7 +40,7 @@ public class SimulinkElement implements IModelElement {
 	public String getType() {
 		if (type == null) {
 			try {
-				type = (String) engine.evalWithResult("get_param ('" + getPath() + "', 'BlockType')");
+				type = (String) engine.evalWithResult("get_param ('?', 'BlockType')", getPath());
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -61,11 +61,11 @@ public class SimulinkElement implements IModelElement {
 	}
 	
 	public void link(SimulinkElement other, int outPort, int inPort) {
-		String command = "OutPortHandles = get_param('" + getPath() + "','PortHandles')\n" +
-						 "InPortHandles = get_param('" + other.getPath() + "','PortHandles')\n" + 
-						 "add_line('" + model.getSimulinkModelName() + "',OutPortHandles.Outport(" + outPort + "),InPortHandles.Inport(" + inPort + "))";
+		String command = "OutPortHandles = get_param('?','PortHandles')\n" +
+						 "InPortHandles = get_param('?','PortHandles')\n" + 
+						 "add_line('?',OutPortHandles.Outport(?),InPortHandles.Inport(?))";
 		try {
-			engine.eval(command);
+			engine.eval(command, getPath(), other.getPath(), model.getSimulinkModelName(), outPort, inPort);
 		}
 		catch (Exception ex) {
 			throw new RuntimeException(ex);
