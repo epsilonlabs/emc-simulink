@@ -6,13 +6,24 @@ import org.eclipse.epsilon.eol.models.IModelElement;
 public class SimulinkElement implements IModelElement {
 	
 	protected SimulinkModel model = null;
-	protected String path = null;
+	protected Double handle = null;
 	protected String type;
 	protected SimulinkEngine engine;
 	
 	public SimulinkElement(SimulinkModel model, String path, String type, SimulinkEngine engine) {
 		this.model = model;
-		this.path = path;
+		try {
+			handle = (Double) engine.evalWithResult("add_block('?', '?', 'MakeNameUnique', 'on')", type, path);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		this.type = type;
+		this.engine = engine;
+	}
+	
+	public SimulinkElement(SimulinkModel model, Double handle, String type, SimulinkEngine engine) {
+		this.model = model;
+		this.handle = handle;
 		this.type = type;
 		this.engine = engine;
 	}
@@ -22,25 +33,14 @@ public class SimulinkElement implements IModelElement {
 		return model;
 	}
 	
-	public String getPath() {
-		return path;
-	}
-	
-	public void attach(boolean makeNameUnique) {
-		try {
-			String makeNameUniqueFlag = makeNameUnique ? "on" : "off";
-			Double handle = (Double) engine.evalWithResult("add_block('?', '?', 'MakeNameUnique', '?')", type, path, makeNameUniqueFlag);
-			path = (String) engine.evalWithResult("getfullname(" + handle + ")");
-		}
-		catch (Exception ex) {
-			throw new RuntimeException(ex);
-		}
+	public Double getHandle() {
+		return handle;
 	}
 	
 	public String getType() {
 		if (type == null) {
 			try {
-				type = (String) engine.evalWithResult("get_param ('?', 'BlockType')", getPath());
+				type = (String) engine.evalWithSetupAndResult("handle = ?", "get_param (handle, 'BlockType')", getHandle());
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -61,14 +61,24 @@ public class SimulinkElement implements IModelElement {
 	}
 	
 	public void link(SimulinkElement other, int outPort, int inPort) {
-		String command = "OutPortHandles = get_param('?','PortHandles')\n" +
-						 "InPortHandles = get_param('?','PortHandles')\n" + 
+		String command = "sourceHandle = ?\n" +
+						 "targetHandle = ?\n" +
+						 "OutPortHandles = get_param(sourceHandle,'PortHandles')\n" +
+						 "InPortHandles = get_param(targetHandle,'PortHandles')\n" + 
 						 "add_line('?',OutPortHandles.Outport(?),InPortHandles.Inport(?))";
 		try {
-			engine.eval(command, getPath(), other.getPath(), model.getSimulinkModelName(), outPort, inPort);
+			engine.eval(command, getHandle(), other.getHandle(), model.getSimulinkModelName(), outPort, inPort);
 		}
 		catch (Exception ex) {
 			throw new RuntimeException(ex);
+		}
+	}
+	
+	public String getPath() {
+		try {
+			return (String) engine.evalWithResult("getfullname(" + handle + ")");
+		} catch (Exception e) {
+			throw new RuntimeException(e);
 		}
 	}
 	

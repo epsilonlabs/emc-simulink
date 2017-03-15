@@ -14,7 +14,7 @@ public class SimulinkPropertyGetter extends JavaPropertyGetter {
 	@Override
 	public Object invoke(Object object, String property) throws EolRuntimeException {
 		try {
-			return engine.evalWithResult("get_param ('?', '?')", ((SimulinkElement) object).getPath(), property);
+			return engine.evalWithSetupAndResult("handle = ?", "get_param (handle, '?')", ((SimulinkElement) object).getHandle(), property);
 		}
 		catch (Exception ex) {
 			return super.invoke(object, property);

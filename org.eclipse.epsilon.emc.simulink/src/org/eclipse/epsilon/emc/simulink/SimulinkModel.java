@@ -41,28 +41,12 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 		
 		load();
 	}
-	
-	
-	@Override
-	public Object createInstance(String type, Collection<Object> parameters)
-			throws EolModelElementTypeNotFoundException, EolNotInstantiableModelElementTypeException {
-		SimulinkElement instance = new SimulinkElement(this, getSimulinkModelName() + "/" + parameters.iterator().next(), type, engine);
-		instance.attach(false);
 		
-		if (isCachingEnabled()) {
-			addToCache(getSimpleTypeName(type), instance);
-		}
-		
-		return instance;
-	}
-	
 	@Override
 	protected SimulinkElement createInstanceInModel(String type)
 			throws EolModelElementTypeNotFoundException, EolNotInstantiableModelElementTypeException {
 		
-		SimulinkElement instance = new SimulinkElement(this, getSimulinkModelName() + "/" + getSimpleTypeName(type), type, engine);
-		instance.attach(true);
-		return instance;
+		return new SimulinkElement(this, getSimulinkModelName() + "/" + getSimpleTypeName(type), type, engine);
 	}
 	
 	protected String getSimpleTypeName(String type) {
@@ -123,13 +107,12 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 
 	@Override
 	public String getElementId(Object instance) {
-		return ((SimulinkElement) instance).getPath();
+		return ((SimulinkElement) instance).getHandle() + "";
 	}
 
 	@Override
 	public void setElementId(Object instance, String newId) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
@@ -167,7 +150,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	@Override
 	protected Collection<SimulinkElement> allContentsFromModel() {
 		try {
-			return getElementsForPaths(engine.evalWithResult("find_system('?')", getSimulinkModelName()), null);
+			return getElementsForHandles(engine.evalWithResult("find_system('?', 'FindAll', 'on')", getSimulinkModelName()), null);
 		} catch (Exception e) {
 			return Collections.emptyList();
 		}
@@ -177,7 +160,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	protected Collection<SimulinkElement> getAllOfTypeFromModel(String type)
 			throws EolModelElementTypeNotFoundException {
 		try {
-			return getElementsForPaths(engine.evalWithResult("find_system('?','BlockType', '?')", getSimulinkModelName(), type), type);
+			return getElementsForHandles(engine.evalWithResult("find_system('?', 'FindAll', 'on', 'BlockType', '?')", getSimulinkModelName(), type), type);
 		} catch (Exception e) {
 			throw new EolModelElementTypeNotFoundException(this.getName(), type);
 		}
@@ -192,14 +175,14 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 		else return getAllOfTypeFromModel(kind);
 	}
 	
-	protected List<SimulinkElement> getElementsForPaths(Object paths, String type) {
-		if (paths instanceof String) {
-			paths = new String[]{(String) paths};
+	protected List<SimulinkElement> getElementsForHandles(Object handles, String type) {
+		if (handles instanceof Double) {
+			handles = new Double[]{(Double) handles};
 		}
 		
 		List<SimulinkElement> elements = new ArrayList<SimulinkElement>();
-		for (String path : (String[]) paths) {
-			elements.add(new SimulinkElement(this, path, type, engine));
+		for (Double handle : (Double[]) handles) {
+			elements.add(new SimulinkElement(this, handle, type, engine));
 		}
 		
 		return elements;
@@ -213,7 +196,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	@Override
 	protected boolean deleteElementInModel(Object instance) throws EolRuntimeException {
 		try {
-			engine.eval("delete_block ('?')", ((SimulinkElement) instance).getPath());
+			engine.eval("handle = ? \n delete_block (handle)", ((SimulinkElement) instance).getHandle());
 			return true;
 		} catch (Exception e) {
 			throw new EolInternalException(e);

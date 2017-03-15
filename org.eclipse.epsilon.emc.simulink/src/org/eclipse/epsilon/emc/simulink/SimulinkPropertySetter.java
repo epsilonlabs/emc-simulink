@@ -14,7 +14,7 @@ public class SimulinkPropertySetter extends JavaPropertySetter {
 	@Override
 	public void invoke(Object value) throws EolRuntimeException {
 		try {
-			engine.eval("set_param ('?', '?', '?')", ((SimulinkElement) object).getPath(), property, value);
+			engine.eval("handle = ? \n set_param (handle, '?', '?')", ((SimulinkElement) object).getHandle(), property, value);
 		}
 		catch (Exception ex) {
 			super.invoke(value);

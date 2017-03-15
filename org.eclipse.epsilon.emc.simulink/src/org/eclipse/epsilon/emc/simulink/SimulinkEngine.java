@@ -19,6 +19,11 @@ public class SimulinkEngine {
 		return engine.getVariable("result");
 	}
 	
+	public Object evalWithSetupAndResult(String setup, String cmd, Object... parameters) throws Exception {
+		eval(setup + "\n" + "result = " + cmd, parameters);
+		return engine.getVariable("result");
+	}
+	
 	public Object evalWithResult(String cmd, Object... parameters) throws Exception {
 		eval("result = " + cmd, parameters);
 		return engine.getVariable("result");
