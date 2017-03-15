@@ -11,13 +11,21 @@ public class SimulinkModelTests {
 	
 	@Test
 	public void createGain() {
-		run("var gain = new `simulink/Math Operations/Gain`;");
+		run("var gain = new `simulink/Math Operations/Gain`; assert (Gain.all.size() = 1);");
 	}
 	
 	@Test
 	public void setAndGetGainGain() {
 		// gain.gain returns a Character at the moment
 		run("var gain = new `simulink/Math Operations/Gain`; gain.gain = 3; assert('3' = (gain.gain + ''));");
+	}
+	
+	@Test
+	public void setAndGetSubsystemParent() {
+		run("var s1 = new `simulink/Ports & Subsystems/Subsystem`; " +
+			"var s2 = new `simulink/Ports & Subsystems/Subsystem`;" + 
+			"s1.parent = s2; " +
+			"assert(s1.parent = s2);");
 	}
 	
 	protected void run(String eol) {

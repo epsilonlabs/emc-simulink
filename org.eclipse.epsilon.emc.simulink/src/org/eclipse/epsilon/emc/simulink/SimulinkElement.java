@@ -74,6 +74,36 @@ public class SimulinkElement implements IModelElement {
 		}
 	}
 	
+	public void setParent(SimulinkElement parent) {
+		try {
+			String name = (String) new SimulinkPropertyGetter(engine).invoke(this, "name");
+			Double newHandle = (Double) engine.evalWithResult("add_block('?', '?', 'MakeNameUnique', 'on')", getPath(), parent.getPath() + "/" + name);
+			engine.eval("handle = ? \n delete_block(handle)", handle);
+			handle = newHandle;
+		}
+		catch (Exception ex) {
+			throw new RuntimeException(ex);
+		}
+	}
+	
+	public SimulinkElement getParent() {
+		
+		String path = getPath();
+		int lastPathSeparator = path.lastIndexOf("/");
+		
+		if (lastPathSeparator > -1) {
+			String parentPath = path.substring(0, lastPathSeparator);
+			try {
+				Double parentHandle = (Double) engine.evalWithResult("getSimulinkBlockHandle('?')", parentPath);
+				return new SimulinkElement(model, parentHandle, null, engine);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+		
+		return null;
+	}
+	
 	public String getPath() {
 		try {
 			return (String) engine.evalWithResult("getfullname(" + handle + ")");
@@ -85,6 +115,11 @@ public class SimulinkElement implements IModelElement {
 	@Override
 	public String toString() {
 		return getPath();
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		return other instanceof SimulinkElement && ((SimulinkElement) other).getHandle().equals(this.getHandle());
 	}
 	
 }

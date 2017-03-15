@@ -41,7 +41,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 		
 		load();
 	}
-		
+	
 	@Override
 	protected SimulinkElement createInstanceInModel(String type)
 			throws EolModelElementTypeNotFoundException, EolNotInstantiableModelElementTypeException {
@@ -181,8 +181,16 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 		}
 		
 		List<SimulinkElement> elements = new ArrayList<SimulinkElement>();
-		for (Double handle : (Double[]) handles) {
-			elements.add(new SimulinkElement(this, handle, type, engine));
+		
+		if (handles instanceof Double[]) {
+			for (Double handle : (Double[]) handles) {
+				elements.add(new SimulinkElement(this, handle, type, engine));
+			}
+		}
+		else if (handles instanceof double[]) {
+			for (double handle : (double[]) handles) {
+				elements.add(new SimulinkElement(this, handle, type, engine));
+			}
 		}
 		
 		return elements;
