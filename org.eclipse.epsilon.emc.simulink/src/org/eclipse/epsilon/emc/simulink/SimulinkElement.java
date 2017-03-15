@@ -67,17 +67,22 @@ public class SimulinkElement implements IModelElement {
 						 "InPortHandles = get_param(targetHandle,'PortHandles')\n" + 
 						 "add_line('?',OutPortHandles.Outport(?),InPortHandles.Inport(?))";
 		try {
-			engine.eval(command, getHandle(), other.getHandle(), model.getSimulinkModelName(), outPort, inPort);
+			engine.eval(command, getHandle(), other.getHandle(), getParentPath(), outPort, inPort);
 		}
 		catch (Exception ex) {
 			throw new RuntimeException(ex);
 		}
 	}
 	
+	protected String getParentPath() {
+		SimulinkElement parent = getParent();
+		return parent == null ? model.getSimulinkModelName() : parent.getPath();
+	}
+	
 	public void setParent(SimulinkElement parent) {
 		try {
 			String name = (String) new SimulinkPropertyGetter(engine).invoke(this, "name");
-			Double newHandle = (Double) engine.evalWithResult("add_block('?', '?', 'MakeNameUnique', 'on')", getPath(), parent.getPath() + "/" + name);
+			Double newHandle = (Double) engine.evalWithResult("add_block('?', '?', 'MakeNameUnique', 'on')", getPath(), getParentPath() + "/" + name);
 			engine.eval("handle = ? \n delete_block(handle)", handle);
 			handle = newHandle;
 		}
@@ -86,6 +91,10 @@ public class SimulinkElement implements IModelElement {
 		}
 	}
 	
+	/**
+	 * Returns null for top-level elements and a 
+	 * SimulinkElement for nested elements
+	 */
 	public SimulinkElement getParent() {
 		
 		String path = getPath();
@@ -93,6 +102,9 @@ public class SimulinkElement implements IModelElement {
 		
 		if (lastPathSeparator > -1) {
 			String parentPath = path.substring(0, lastPathSeparator);
+			
+			if (parentPath.indexOf("/") < 0) return null;
+			
 			try {
 				Double parentHandle = (Double) engine.evalWithResult("getSimulinkBlockHandle('?')", parentPath);
 				return new SimulinkElement(model, parentHandle, null, engine);

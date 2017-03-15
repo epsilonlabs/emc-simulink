@@ -27,6 +27,15 @@ public class SimulinkModelTests {
 			"s1.parent = s2; " +
 			"assert(s1.parent = s2);");
 	}
+
+	@Test
+	public void setAndUnsetSubsystemParent() {
+		run("var s1 = new `simulink/Ports & Subsystems/Subsystem`; " +
+			"var s2 = new `simulink/Ports & Subsystems/Subsystem`;" + 
+			"s1.parent = s2; " +
+			"s1.parent = null; " +
+			"assert(s1.parent = null);");
+	}
 	
 	protected void run(String eol) {
 		SimulinkModel model = null;
