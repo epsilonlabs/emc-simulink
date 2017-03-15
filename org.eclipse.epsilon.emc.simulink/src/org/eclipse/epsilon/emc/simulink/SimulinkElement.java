@@ -61,13 +61,33 @@ public class SimulinkElement implements IModelElement {
 	}
 	
 	public void link(SimulinkElement other, int outPort, int inPort) {
+		manageLink(other, outPort, inPort, true);
+	}
+	
+	public void unlink(SimulinkElement other) {
+		unlink(other, 1, 1);
+	}
+	
+	public void unlinkTo(SimulinkElement other, int inPort) {
+		unlink(other, 1, inPort);
+	}
+	
+	public void unlinkFrom(SimulinkElement other, int outPort) {
+		unlink(other, outPort, 1);
+	}
+	
+	public void unlink(SimulinkElement other, int outPort, int inPort) {
+		manageLink(other, outPort, inPort, false);
+	}
+	
+	public void manageLink(SimulinkElement other, int outPort, int inPort, boolean create) {
 		String command = "sourceHandle = ?\n" +
 						 "targetHandle = ?\n" +
 						 "OutPortHandles = get_param(sourceHandle,'PortHandles')\n" +
 						 "InPortHandles = get_param(targetHandle,'PortHandles')\n" + 
-						 "add_line('?',OutPortHandles.Outport(?),InPortHandles.Inport(?))";
+						 "?_line('?',OutPortHandles.Outport(?),InPortHandles.Inport(?))";
 		try {
-			engine.eval(command, getHandle(), other.getHandle(), getParentPath(), outPort, inPort);
+			engine.eval(command, getHandle(), other.getHandle(), create ? "add" : "delete", getParentPath(), outPort, inPort);
 		}
 		catch (Exception ex) {
 			throw new RuntimeException(ex);
@@ -82,7 +102,8 @@ public class SimulinkElement implements IModelElement {
 	public void setParent(SimulinkElement parent) {
 		try {
 			String name = (String) new SimulinkPropertyGetter(engine).invoke(this, "name");
-			Double newHandle = (Double) engine.evalWithResult("add_block('?', '?', 'MakeNameUnique', 'on')", getPath(), getParentPath() + "/" + name);
+			String parentPath = parent == null ? model.getSimulinkModelName() : parent.getPath();
+			Double newHandle = (Double) engine.evalWithResult("add_block('?', '?', 'MakeNameUnique', 'on')", getPath(), parentPath + "/" + name);
 			engine.eval("handle = ? \n delete_block(handle)", handle);
 			handle = newHandle;
 		}
