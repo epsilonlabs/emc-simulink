@@ -2,6 +2,11 @@
 
 Eclipse plugins that extend Epsilon's Model Connectivity (EMC) layer, and add support for managing Simulink models using languages of the Epsilon platform, to pefrorm activities such as code generation, model validation and model-to-model transformation.
 
+# Demo
+The YouTube video below shows the Simulink driver in action.
+
+[![EMC Simulink Demo](http://img.youtube.com/vi/k3hdD7Ot0Bc/0.jpg)](https://www.youtube.com/watch?v=k3hdD7Ot0Bc)
+
 # Installation
 
 * Install the latest **interim** version of Epsilon
