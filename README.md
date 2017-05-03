@@ -12,6 +12,7 @@ The YouTube video below shows the Simulink driver in action.
 * Install the latest **interim** version of Epsilon
 * Clone the repository
 * Import all projects in your Eclipse workspace
+* If on Windows, ensure that `<matlab-root>/bin/win64` is in the [system path](http://windowsitpro.com/systems-management/how-can-i-add-new-folder-my-system-path)
 * Run a nested Eclipse instance with the VM argument 
   * `-Djava.library.path=<matlab-root>/bin/maci64` (change `maci46` to the `win64` if on Windows)
 
