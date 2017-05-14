@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.epsilon.common.dt.EpsilonCommonsPlugin;
+import org.eclipse.epsilon.emc.simulink.MatlabEnginePool;
 import org.eclipse.epsilon.emc.simulink.SimulinkModel;
 import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.preference.FieldEditor;
@@ -24,14 +25,53 @@ public class SimulinkModelPreferencePage extends PreferencePage implements IWork
 		
 		Composite composite = new Composite(parent, SWT.FILL);
 
-		fieldEditors.add(new DirectoryFieldEditor(SimulinkModel.PROPERTY_LIBRARY_PATH, "Library path", composite));
-		fieldEditors.add(new FileFieldEditor(SimulinkModel.PROPERTY_ENGINE_JAR_PATH, "Engine JAR path", true, composite));
-
+		final DirectoryFieldEditor libraryPathEditor = new DirectoryFieldEditor(SimulinkModel.PROPERTY_LIBRARY_PATH, "Library directory", composite);
+		final FileFieldEditor engineJarPathEditor = new FileFieldEditor(SimulinkModel.PROPERTY_ENGINE_JAR_PATH, "Engine JAR file", true, composite);
+		
+		fieldEditors.add(libraryPathEditor);
+		fieldEditors.add(engineJarPathEditor);
+		
 		for (FieldEditor fieldEditor : fieldEditors) {
 			fieldEditor.setPreferenceStore(EpsilonCommonsPlugin.getDefault().getPreferenceStore());
 			fieldEditor.load();
 		}
 		
+		/*
+		Button testConnectionButton = new Button(composite, SWT.NONE);
+		testConnectionButton.setText("Test connection");
+		testConnectionButton.addSelectionListener(new SelectionListener() {
+			
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				try {
+					MatlabEnginePool.reset();
+					MatlabEnginePool.getInstance(libraryPathEditor.getStringValue(), engineJarPathEditor.getStringValue()).getMatlabEngine().eval("42");
+				}
+				catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				
+			}
+		});
+		
+		Button resetConnectionButton = new Button(composite, SWT.NONE);
+		resetConnectionButton.setText("Reset connection");
+		testConnectionButton.addSelectionListener(new SelectionListener() {
+			
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				MatlabEnginePool.reset();
+			}
+			
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				
+			}
+		});*/
 		return composite;
 	}
 	
@@ -44,6 +84,7 @@ public class SimulinkModelPreferencePage extends PreferencePage implements IWork
 		for (FieldEditor fieldEditor : fieldEditors) {
 			fieldEditor.store();
 		}
+		MatlabEnginePool.reset();
 		return true;
 	}
 

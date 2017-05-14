@@ -147,13 +147,13 @@ public class SimulinkBlock extends SimulinkElement {
 			engine.eval("handle = ? \n ph = get_param(handle, 'PortHandles') \n "
 					+ "line = get_param(ph.Outport(1), 'Line') \n inspect(line)"
 					+ "lc = get_param(line, 'LineChildren')", this.handle);
-			System.out.println("Line:" + engine.getImpl().getVariable("line"));
+			System.out.println("Line:" + engine.getVariable("line"));
 		}
 		catch (Throwable t) {
 			t.printStackTrace();
 		}
 		
-		return Collections.EMPTY_LIST;
+		return Collections.emptyList();
 		
 	}
 	

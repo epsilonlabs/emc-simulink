@@ -1,14 +1,18 @@
 package org.eclipse.epsilon.emc.simulink;
 
-//import com.mathworks.engine.MatlabEngine;
+import java.lang.reflect.Method;
 
 public class MatlabEngine {
 	
-	protected ReflectiveMatlabEngine engine;
+	protected Object engine;
+	protected Method evalMethod;
+	protected Method getVariableMethod;
 	
-	public MatlabEngine(String libraryPath, String engineJarPath) {
+	public MatlabEngine(Class<?> matlabEngineClass) {
 		try {
-			this.engine = ReflectiveMatlabEngine.connectMatlab(libraryPath, engineJarPath);
+			engine = matlabEngineClass.getMethod("connectMatlab").invoke(null);
+			evalMethod = engine.getClass().getMethod("eval", String.class);
+			getVariableMethod = engine.getClass().getMethod("getVariable", String.class);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -16,13 +20,13 @@ public class MatlabEngine {
 	
 	public Object evalWithResult(String cmd) throws Exception {
 		eval("result = " + cmd);
-		return engine.getVariable("result");
+		return getVariable("result");
 	}
 	
 	public Object evalWithSetupAndResult(String setup, String cmd, Object... parameters) {
 		eval(setup + "\n" + "result = " + cmd, parameters);
 		try {
-			return engine.getVariable("result");
+			return getVariable("result");
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -31,15 +35,7 @@ public class MatlabEngine {
 	public Object evalWithResult(String cmd, Object... parameters) {
 		eval("result = " + cmd, parameters);
 		try {
-			return engine.getVariable("result");
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	public void eval(String cmd) {
-		try {
-			engine.eval(cmd);
+			return getVariable("result");
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -57,14 +53,29 @@ public class MatlabEngine {
 		}
 		cmd = cmd.substring(1, cmd.length()-1);
 		try {
-			engine.eval(cmd);
+			eval(cmd);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 	
-	public ReflectiveMatlabEngine getImpl() {
-		return engine;
+	public void eval(String cmd) {
+		try {
+			evalMethod.invoke(engine, cmd);
+		}
+		catch (Exception ex) {
+			throw new RuntimeException(ex);
+		}
 	}
+
+	public Object getVariable(String variable) {
+		try {
+			return getVariableMethod.invoke(engine, variable);
+		}
+		catch (Exception ex) {
+			throw new RuntimeException(ex);
+		}
+	}
+
 	
 }
