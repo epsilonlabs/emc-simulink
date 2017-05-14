@@ -47,6 +47,8 @@ public class SimulinkModelTests {
 			model.setFile(new File("model" + String.valueOf(UUID.randomUUID()).replace("-", "") + ".slx"));
 			model.setReadOnLoad(false);
 			model.setStoredOnDisposal(false);
+			model.setLibraryPath("/Applications/MATLAB_R2017a.app/bin/maci64");
+			model.setEngineJarPath("/Applications/MATLAB_R2017a.app/extern/engines/java/jar/engine.jar");
 			model.load();
 			module.getContext().getModelRepository().addModel(model);
 			module.execute();

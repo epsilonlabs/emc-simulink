@@ -5,23 +5,21 @@ import org.eclipse.epsilon.eol.execute.introspection.java.JavaPropertyGetter;
 
 public class SimulinkPropertyGetter extends JavaPropertyGetter {
 	
-	protected SimulinkEngine engine;
+	protected MatlabEngine engine;
 	
-	public SimulinkPropertyGetter(SimulinkEngine engine) {
-		this.engine = engine;
-	}
+	public SimulinkPropertyGetter() {}
 	
 	@Override
 	public Object invoke(Object object, String property) throws EolRuntimeException {
 		
 		SimulinkElement element = (SimulinkElement) object;
 		
-		if ("parent".equalsIgnoreCase(property)) {
-			return element.getParent();
+		if (element instanceof SimulinkBlock && "parent".equalsIgnoreCase(property)) {
+			return ((SimulinkBlock) element).getParent();
 		}
 		
 		try {
-			return engine.evalWithSetupAndResult("handle = ?", "get_param (handle, '?')", element.getHandle(), property);
+			return element.getProperty(property);
 		}
 		catch (Exception ex) {
 			return super.invoke(object, property);

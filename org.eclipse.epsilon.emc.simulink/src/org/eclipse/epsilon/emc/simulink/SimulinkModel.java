@@ -19,14 +19,31 @@ import org.eclipse.epsilon.eol.execute.introspection.IPropertySetter;
 import org.eclipse.epsilon.eol.models.CachedModel;
 import org.eclipse.epsilon.eol.models.IRelativePathResolver;
 
-public class SimulinkModel extends CachedModel<SimulinkElement> {
+public class SimulinkModel extends CachedModel<SimulinkBlock> {
 	
 	protected File file = null;
-	protected SimulinkEngine engine;
+	protected MatlabEngine engine;
 	protected SimulinkPropertyGetter propertyGetter;
 	protected SimulinkPropertySetter propertySetter;
+	protected String libraryPath;
+	protected String engineJarPath;
+	protected double handle = -1;
 	
 	public static String PROPERTY_FILE = "file";
+	public static String PROPERTY_LIBRARY_PATH = "library_path";
+	public static String PROPERTY_ENGINE_JAR_PATH = "engine_jar_path";
+	
+	public static void main(String[] args) throws Exception {
+		SimulinkModel model = new SimulinkModel();
+		model.setName("M");
+		model.setFile(File.createTempFile("foo", ".slx"));
+		model.setReadOnLoad(false);
+		model.setStoredOnDisposal(false);
+		model.setEngineJarPath("/Applications/MATLAB_R2017a.app/extern/engines/java/jar/engine.jar");
+		model.setLibraryPath("/Applications/MATLAB_R2017a.app/bin/maci64");
+		model.load();
+		System.out.println(model.getAllOfType("Gain"));
+	}
 	
 	public void load(StringProperties properties, IRelativePathResolver resolver)
 			throws EolModelLoadingException {
@@ -34,6 +51,8 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 		super.load(properties, resolver);
 		
 		String filePath = properties.getProperty(SimulinkModel.PROPERTY_FILE);
+		if (properties.hasProperty(SimulinkModel.PROPERTY_LIBRARY_PATH)) libraryPath = properties.getProperty(SimulinkModel.PROPERTY_LIBRARY_PATH);
+		if (properties.hasProperty(SimulinkModel.PROPERTY_ENGINE_JAR_PATH)) engineJarPath = properties.getProperty(SimulinkModel.PROPERTY_ENGINE_JAR_PATH);
 		
 		if (filePath != null && filePath.trim().length() > 0) {
 			file = new File(resolver.resolve(filePath));
@@ -43,10 +62,10 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	}
 	
 	@Override
-	protected SimulinkElement createInstanceInModel(String type)
+	protected SimulinkBlock createInstanceInModel(String type)
 			throws EolModelElementTypeNotFoundException, EolNotInstantiableModelElementTypeException {
 		
-		return new SimulinkElement(this, getSimulinkModelName() + "/" + getSimpleTypeName(type), type, engine);
+		return new SimulinkBlock(this, getSimulinkModelName() + "/" + getSimpleTypeName(type), type, engine);
 	}
 	
 	protected String getSimpleTypeName(String type) {
@@ -62,7 +81,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	@Override
 	protected void loadModel() throws EolModelLoadingException {
 		try {
-			engine = SimulinkEnginePool.getInstance().getSimulinkEngine();
+			engine = MatlabEnginePool.getInstance(libraryPath, engineJarPath).getMatlabEngine();
 			if (readOnLoad) {
 				// TODO: Add a flag for using the invisible load_system instead
 				engine.eval("open_system " + file.getAbsolutePath());
@@ -76,6 +95,9 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 				}
 				engine.eval("open_system " + getSimulinkModelName());
 			}
+			
+			this.handle = (Double) engine.evalWithResult("get_param('?', 'Handle')", getSimulinkModelName());
+			
 		} catch (Exception e) {
 			throw new EolModelLoadingException(e, this);
 		};
@@ -96,7 +118,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 
 	@Override
 	public String getTypeNameOf(Object instance) {
-		return ((SimulinkElement) instance).getType();
+		return ((SimulinkBlock) instance).getType();
 	}
 
 	@Override
@@ -107,7 +129,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 
 	@Override
 	public String getElementId(Object instance) {
-		return ((SimulinkElement) instance).getHandle() + "";
+		return ((SimulinkBlock) instance).getHandle() + "";
 	}
 
 	@Override
@@ -148,16 +170,16 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	}
 
 	@Override
-	protected Collection<SimulinkElement> allContentsFromModel() {
+	protected Collection<SimulinkBlock> allContentsFromModel() {
 		try {
-			return getElementsForHandles(engine.evalWithResult("find_system('?', 'FindAll', 'on')", getSimulinkModelName()), null);
+			return getElementsForHandles(engine.evalWithResult("find_system(?, 'FindAll', 'on')", this.handle), null);
 		} catch (Exception e) {
 			return Collections.emptyList();
 		}
 	}
 
 	@Override
-	protected Collection<SimulinkElement> getAllOfTypeFromModel(String type)
+	protected Collection<SimulinkBlock> getAllOfTypeFromModel(String type)
 			throws EolModelElementTypeNotFoundException {
 		try {
 			return getElementsForHandles(engine.evalWithResult("find_system('?', 'FindAll', 'on', 'BlockType', '?')", getSimulinkModelName(), type), type);
@@ -167,7 +189,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	}
 
 	@Override
-	protected Collection<SimulinkElement> getAllOfKindFromModel(String kind)
+	protected Collection<SimulinkBlock> getAllOfKindFromModel(String kind)
 			throws EolModelElementTypeNotFoundException {
 		if ("Block".equals(kind)) {
 			return allContentsFromModel();
@@ -175,21 +197,21 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 		else return getAllOfTypeFromModel(kind);
 	}
 	
-	protected List<SimulinkElement> getElementsForHandles(Object handles, String type) {
+	protected List<SimulinkBlock> getElementsForHandles(Object handles, String type) {
 		if (handles instanceof Double) {
 			handles = new Double[]{(Double) handles};
 		}
 		
-		List<SimulinkElement> elements = new ArrayList<SimulinkElement>();
+		List<SimulinkBlock> elements = new ArrayList<SimulinkBlock>();
 		
 		if (handles instanceof Double[]) {
 			for (Double handle : (Double[]) handles) {
-				elements.add(new SimulinkElement(this, handle, type, engine));
+				elements.add(new SimulinkBlock(this, handle, type, engine));
 			}
 		}
 		else if (handles instanceof double[]) {
 			for (double handle : (double[]) handles) {
-				elements.add(new SimulinkElement(this, handle, type, engine));
+				elements.add(new SimulinkBlock(this, handle, type, engine));
 			}
 		}
 		
@@ -198,13 +220,13 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 
 	@Override
 	protected void disposeModel() {
-		SimulinkEnginePool.getInstance().release(engine);
+		MatlabEnginePool.getInstance(libraryPath, engineJarPath).release(engine);
 	}
 
 	@Override
 	protected boolean deleteElementInModel(Object instance) throws EolRuntimeException {
 		try {
-			engine.eval("handle = ? \n delete_block (handle)", ((SimulinkElement) instance).getHandle());
+			engine.eval("handle = ? \n delete_block (handle)", ((SimulinkBlock) instance).getHandle());
 			return true;
 		} catch (Exception e) {
 			throw new EolInternalException(e);
@@ -218,7 +240,7 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 
 	@Override
 	protected Collection<String> getAllTypeNamesOf(Object instance) {
-		return Arrays.asList("Block", ((SimulinkElement)instance).getType());
+		return Arrays.asList("Block", ((SimulinkBlock)instance).getType());
 	}
 	
 	@Override
@@ -232,12 +254,12 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 	@Override
 	public IPropertyGetter getPropertyGetter() {
 		if (propertyGetter == null) {
-			propertyGetter = new SimulinkPropertyGetter(engine);
+			propertyGetter = new SimulinkPropertyGetter();
 		}
 		return propertyGetter;
 	}
 	
-	public SimulinkEngine getEngine() {
+	public MatlabEngine getEngine() {
 		return engine;
 	}
 	
@@ -247,5 +269,27 @@ public class SimulinkModel extends CachedModel<SimulinkElement> {
 		if (pos > 0) { name = name.substring(0, pos); }
 		return name;
 	}
+	
+	public double getHandle() {
+		return handle;
+	}
+
+	public String getLibraryPath() {
+		return libraryPath;
+	}
+
+	public void setLibraryPath(String libraryPath) {
+		this.libraryPath = libraryPath;
+	}
+
+	public String getEngineJarPath() {
+		return engineJarPath;
+	}
+
+	public void setEngineJarPath(String engineJarPath) {
+		this.engineJarPath = engineJarPath;
+	}
+	
+	
 	
 }

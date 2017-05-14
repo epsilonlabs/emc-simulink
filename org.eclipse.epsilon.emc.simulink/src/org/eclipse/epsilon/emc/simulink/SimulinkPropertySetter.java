@@ -6,19 +6,19 @@ import org.eclipse.epsilon.eol.execute.introspection.java.JavaPropertySetter;
 
 public class SimulinkPropertySetter extends JavaPropertySetter {
 	
-	protected SimulinkEngine engine;
+	protected MatlabEngine engine;
 	
-	public SimulinkPropertySetter(SimulinkEngine engine) {
+	public SimulinkPropertySetter(MatlabEngine engine) {
 		this.engine = engine;
 	}
 	
 	@Override
 	public void invoke(Object value) throws EolRuntimeException {
 		
-		SimulinkElement element = (SimulinkElement) object;
+		SimulinkBlock element = (SimulinkBlock) object;
 		
 		if ("parent".equalsIgnoreCase(property)) {
-			element.setParent((SimulinkElement) value); return;
+			element.setParent((SimulinkBlock) value); return;
 		}
 		
 		try {
