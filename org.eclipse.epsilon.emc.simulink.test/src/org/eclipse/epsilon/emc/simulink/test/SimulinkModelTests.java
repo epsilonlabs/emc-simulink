@@ -39,6 +39,11 @@ public class SimulinkModelTests {
 	
 	protected void run(String eol) {
 		SimulinkModel model = null;
+		
+		File simulinkEngineJar = new File("/Applications/MATLAB_R2017a.app/extern/engines/java/jar/engine.jar");
+		File simulinkLibraryPath = new File("/Applications/MATLAB_R2017a.app/bin/maci64");
+		if (!simulinkEngineJar.exists() || !simulinkLibraryPath.exists()) return;
+		
 		try {
 			EolModule module = new EolModule();
 			module.parse(eol);
@@ -47,8 +52,8 @@ public class SimulinkModelTests {
 			model.setFile(new File("model" + String.valueOf(UUID.randomUUID()).replace("-", "") + ".slx"));
 			model.setReadOnLoad(false);
 			model.setStoredOnDisposal(false);
-			model.setLibraryPath("/Applications/MATLAB_R2017a.app/bin/maci64");
-			model.setEngineJarPath("/Applications/MATLAB_R2017a.app/extern/engines/java/jar/engine.jar");
+			model.setLibraryPath(simulinkLibraryPath.getAbsolutePath());
+			model.setEngineJarPath(simulinkEngineJar.getAbsolutePath());
 			model.load();
 			module.getContext().getModelRepository().addModel(model);
 			module.execute();
